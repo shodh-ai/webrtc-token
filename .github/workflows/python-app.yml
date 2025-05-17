@@ -1,0 +1,43 @@
+name: GCP Deployment
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: "projects/13287061127/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+        service_account: "${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}"
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker ${{ secrets.REGISTRY }} -q
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.SERVICE_NAME }}:${{ github.sha }} .
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.SERVICE_NAME }}:${{ github.sha }}
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy ${{ secrets.SERVICE_NAME }} \
+          --image=${{ secrets.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.SERVICE_NAME }}:${{ github.sha }} \
+          --region=${{ secrets.GCP_REGION }} \
+          --platform=managed \
+          --allow-unauthenticated
