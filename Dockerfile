@@ -14,8 +14,7 @@ RUN npm ci --only=production
 COPY . .
 
 # Expose the service port
-EXPOSE 3002
-
+EXPOSE 8080
 # Set environment variables
 ENV NODE_ENV=production
 
