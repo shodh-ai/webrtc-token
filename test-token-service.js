@@ -3,7 +3,7 @@
 // Using native fetch API
 
 // Configuration
-const tokenServiceUrl = 'http://localhost:3002';
+const tokenServiceUrl = 'http://localhost:8080';
 const testRoom = 'test-room-' + Math.floor(Math.random() * 1000);
 const testUser = 'test-user';
 
